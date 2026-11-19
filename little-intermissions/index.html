@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f3eb">
+  <title>Little intermissions</title>
+  <link rel="stylesheet" href="style.css">
+  <script type="module" src="app.mjs"></script>
+</head>
+<body>
+<main>
+  <header>
+    <div class="wordmark"><span class="sun" aria-hidden="true">&#10035;</span> little intermissions<span class="period">.</span></div>
+    <span class="local-label">MADE FOR YOUR OFF MOMENTS</span>
+  </header>
+  <section class="intro">
+    <p class="eyebrow">A SMALL PLACE TO STEP AWAY</p>
+    <h1>You don't have to<br>push through everything.</h1>
+    <p>Three little ways to leave the loop. Try them on. See who feels like you.</p>
+  </section>
+  <nav role="tablist" aria-label="Choose a break companion">
+    <button role="tab" id="tab-frog" aria-controls="companion" data-mode="frog"><span class="tab-icon" aria-hidden="true">&#127811;</span><span>Little expedition<small>borrow some curiosity</small></span></button>
+    <button role="tab" id="tab-bakery" aria-controls="companion" data-mode="bakery"><span class="tab-icon" aria-hidden="true">&#127838;</span><span>Brain Bakery<small>let the problem rest</small></span></button>
+    <button role="tab" id="tab-duck" aria-controls="companion" data-mode="duck"><span class="tab-icon" aria-hidden="true">&#129414;</span><span>Duck takes over<small>accept dubious help</small></span></button>
+  </nav>
+  <div id="error" role="alert" hidden></div>
+  <section id="companion" role="tabpanel" aria-labelledby="tab-frog" data-mode="frog" data-phase="idle" aria-busy="true">
+    <div class="card-top"><span id="chapter" class="eyebrow">01 / A LITTLE EXPEDITION</span><button id="favorite" class="favorite" disabled aria-pressed="false">&#9825; Pick this one</button></div>
+    <div id="scene" class="scene" aria-hidden="true"></div>
+    <div class="story">
+      <p id="kicker" class="eyebrow">MEET FERN. VERY SMALL. BIG PLANS.</p>
+      <h2 id="title" aria-live="polite">Loading your companions...</h2>
+      <p id="speech" class="speech"></p>
+      <p id="detail" class="detail"></p>
+      <div id="note-wrap" class="note-wrap" hidden>
+        <label for="note">Leave a breadcrumb <span>(optional)</span></label>
+        <textarea id="note" rows="2" maxlength="500" placeholder="When I come back, I was going to..."></textarea>
+        <small>Your note stays here, saved locally in this conversation.</small>
+      </div>
+      <div id="return-note" class="return-note" hidden><span class="eyebrow">RIGHT WHERE YOU LEFT IT</span><p id="saved-note"></p></div>
+      <div id="timer-wrap" class="timer-wrap" hidden><span class="timer-flower" aria-hidden="true">&#10035;</span><span id="timer"></span></div>
+      <div class="buttons"><button id="primary" class="primary" disabled>Loading</button><button id="secondary" class="secondary" hidden>Not now</button></div>
+      <div id="demo-wrap" class="demo-wrap">
+        <label class="switch"><input id="demo" type="checkbox" checked><span class="switch-track"></span><span>Quick peek <strong>8 seconds</strong></span></label>
+        <p id="demo-help">A tiny preview. No real break or keepsake recorded.</p>
+      </div>
+      <p id="away-help" class="away-help" hidden></p>
+    </div>
+  </section>
+  <div id="duck-load-error" hidden>
+    <p id="duck-load-message" role="alert"></p>
+    <button id="duck-retry" type="button" class="secondary">Retry duck status</button>
+  </div>
+  <section id="desktop" class="desktop" aria-labelledby="desktop-title" hidden>
+    <div class="desktop-art" aria-hidden="true">&#129414;</div>
+    <div class="desktop-body">
+      <p class="eyebrow">ON YOUR DESKTOP</p>
+      <h3 id="desktop-title">The duck can leave this panel.</h3>
+      <p>A small floating duck for your screen. It naps above the Dock, wanders now and then, and says something silly once in a while. After a long stretch of work it waves you over. Click it and it covers your desk for five minutes. Ignore it and it backs off. Drag it anywhere.</p>
+      <p class="desktop-fine">The floating duck needs macOS 13 or later and the Xcode command line tools. It only reads how long it has been since your last key or mouse movement, not the keys or your work. No sound. Its menu briefly takes focus. Right-click for a focus sprint, <em>Convince me&hellip;</em>, break timing, quiet time, or to send it home. Keyboard controls are available through <code>node /path/to/little-intermissions/duck-cli.mjs help</code>. See the included README for installation and the optional terminal command; installing this extension does not install a global <code>duck</code> command.</p>
+      <div class="desktop-actions"><button id="duck-wake" class="primary" disabled>Wake the duck</button><button id="duck-home" class="secondary" hidden>Send duck home</button></div>
+      <div id="sprint" class="sprint" role="group" aria-labelledby="sprint-title">
+        <p id="sprint-title" class="eyebrow">FOCUS SPRINT</p>
+        <div id="sprint-start" class="sprint-row">
+          <span class="sprint-help">The duck keeps quiet and counts down beside itself. At zero it asks for a real break.</span>
+          <span class="sprint-presets"><button type="button" class="preset" data-minutes="15" aria-label="Start a 15 minute focus sprint">15 min</button><button type="button" class="preset" data-minutes="25" aria-label="Start a 25 minute focus sprint">25 min</button><button type="button" class="preset" data-minutes="45" aria-label="Start a 45 minute focus sprint">45 min</button><button type="button" class="preset" data-minutes="60" aria-label="Start a 60 minute focus sprint">60 min</button></span>
+        </div>
+        <div id="sprint-live" class="sprint-row" hidden>
+          <span id="sprint-clock" class="sprint-clock" role="timer">0:00</span>
+          <span class="sprint-help">left in your sprint. The duck is timing it.</span>
+          <button id="sprint-cancel" type="button" class="secondary">Cancel sprint</button>
+        </div>
+      </div>
+      <p id="duck-status" class="duck-status" role="status"></p>
+    </div>
+  </section>
+  <section class="shelf" aria-label="Your keepsakes">
+    <div class="shelf-heading"><h3>A shelf of small things</h3><span>NOT A SCOREBOARD</span></div>
+    <div id="keepsakes"><p class="empty">Take a real break when you feel like it. A little something will be waiting here.</p></div>
+  </section>
+  <footer>No streaks. No guilt. No creature to keep alive.<br><span>Nothing is watching your work. You're allowed to just leave.</span></footer>
+</main>
+</body>
+</html>
