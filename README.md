@@ -4,9 +4,9 @@
 
 A tiny duck with a TEMP badge and very strong opinions about taking a break. Wake it on your Mac to time a focus sprint, get a gentle nudge, or let it cover your desk for five minutes. It might even file a report when you get back. The stapler was fine, by the way.
 
-[![A sleepy yellow duck above the words "Little intermissions: a duck that covers your desk". Watch the staged demo.](assets/media/duck-demo-poster.png)](assets/media/duck-demo.mp4)
+![Be Right Quack duck in the "Convince me" demo.](assets/media/be-right-quack-demo.gif)
 
-**[Watch the duck demo (MP4)](assets/media/duck-demo.mp4)** — a staged demo with the real duck sprite and lines on a mock desktop.
+Staged demo with the real duck sprite and lines on a mock desktop.
 
 The desktop duck runs on its own. You do not need the Copilot app, a canvas, or an AI agent. Optional **Little intermissions** Copilot canvas integration adds three companions: a canvas version of the duck, **Fern the frog** with tiny expeditions, and **Brain Bakery** with break keepsakes. Only the duck can float on your desktop; Fern and the bakery stay inside the canvas.
 
