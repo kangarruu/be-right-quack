@@ -22,7 +22,7 @@ cd be-right-quack
 node little-intermissions/duck-cli.mjs wake
 ```
 
-The first wake compiles the duck locally and can take a minute. The duck runs as a separate desktop process after the command returns. Right-click it for settings or to send it home. Keep the cloned folder: the duck loads its artwork from there.
+The first wake compiles the duck locally and can take a minute. The duck runs as a separate desktop process after the command returns. Right-click it for settings or to send it home. Keep the cloned folder for future launches and updates. Each source version has its own cached executable and matching animation files; changing checkouts cannot reuse another version's executable based on file timestamps.
 
 ## A duck in your terminal
 
@@ -64,7 +64,7 @@ To use the CLI from that installed copy instead of the clone, set `duck_cli="${C
 ## What stays on your Mac
 
 - **Canvas:** Copilot saves your note, companion preferences, break times, report cursors, and up to 24 keepsakes in `little-intermissions.json` in the current conversation's workspace. The native duck does not read that file. Keep it out of Git if it contains private notes.
-- **Desktop:** `${COPILOT_HOME:-$HOME/.copilot}/state/little-intermissions/` contains the local binary, settings, sprint state, process records, per-instance control credentials, and logs. This defaults to `~/.copilot/state/little-intermissions/` even if Copilot is not installed. Keep it private. Logs are not rotated automatically; compiler diagnostics can include local paths.
+- **Desktop:** `${COPILOT_HOME:-$HOME/.copilot}/state/little-intermissions/` contains cached executable/animation bundles under `builds/`, settings, sprint state, process records, per-instance control credentials, and logs. This defaults to `~/.copilot/state/little-intermissions/` even if Copilot is not installed. Keep it private. Old bundles remain cached until you remove them with the duck stopped. Logs are not rotated automatically; compiler diagnostics can include local paths.
 - **Privacy and limits:** The extension makes no external network requests and sends no analytics. The canvas uses a token-protected, same-origin loopback server. Native control uses private local files and per-instance authentication. Neither isolates the extension from other software running as your user. The duck reads the OS's time since the last input event; it does not record keys, window contents, screenshots, or work activity. There is no login item. The menu briefly takes focus and tries to return it to the previous app. The duck may appear in screen sharing or recordings.
 
 ## Update or uninstall
@@ -72,6 +72,21 @@ To use the CLI from that installed copy instead of the clone, set `duck_cli="${C
 1. Use `node "$duck_cli" home` or right-click and choose **Send duck home**. Wait for the duck to quit. Reloading extensions does not replace a running native duck. If an older duck does not respond to the CLI, use its menu; do not kill a process based on a saved PID.
 2. For the standalone CLI, update the clone with `git pull --ff-only`, or remove the cloned folder to uninstall. If you installed the optional canvas integration, move the installed `little-intermissions` folder out of the extensions directory and reload Copilot's extensions. To update that copy, put the new folder in its place before reloading. If you made a terminal shortcut, remove only the link that points to this extension.
 3. If you want to delete its saved settings and logs, remove only the extension's state directory after the duck has quit. Canvas notes and keepsakes remain in each conversation's `little-intermissions.json`; remove those separately only if you want to lose them.
+
+For a complete local update of the optional canvas integration, first send the duck home and wait for it to quit. Then run these commands from the updated repo root. This backs up the old installation outside the extensions directory and copies the whole package, including `duck/Duck.swift`, `duck/sprite.html`, `duck/voice.js`, `duck/lines.js`, and the launcher. Do not copy only the executable or only `Duck.swift`.
+
+```sh
+copilot_home="${COPILOT_HOME:-$HOME/.copilot}"
+extensions="$copilot_home/extensions"
+mkdir -p "$extensions"
+backup="$(mktemp -d "$copilot_home/little-intermissions-backup.XXXXXX")"
+if [ -e "$extensions/little-intermissions" ] || [ -L "$extensions/little-intermissions" ]; then
+  mv "$extensions/little-intermissions" "$backup/"
+fi
+cp -R little-intermissions "$extensions/"
+```
+
+Reload extensions in Copilot. When you are ready to start the updated duck, run `node "$extensions/little-intermissions/duck-cli.mjs" wake`. The first launch of changed source or animation files builds a new matching bundle; it does not reuse the old shared `duck` executable. Choose **Flip** from the right-click menu to play a gag.
 
 ## Local checks
 

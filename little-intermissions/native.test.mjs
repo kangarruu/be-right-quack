@@ -1,12 +1,11 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFile } from "node:child_process";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, mkdir, readFile, rm, stat, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
-import { fileURLToPath } from "node:url";
-import { duckStatus, isStale, sendCommand, sendHome, wakeDuck } from "./duck-control.mjs";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const run = promisify(execFile);
 test("isolated native duck: quiet snooze, authenticated control, stopping and keyboard settings", { skip: process.platform !== "darwin", timeout: 120000 }, async () => {
@@ -14,8 +13,11 @@ test("isolated native duck: quiet snooze, authenticated control, stopping and ke
     const dir = join(home, "state", "little-intermissions");
     const priorHome = process.env.COPILOT_HOME;
     process.env.COPILOT_HOME = home;
-    const source = fileURLToPath(new URL("./duck/Duck.swift", import.meta.url));
-    const cli = fileURLToPath(new URL("./duck-cli.mjs", import.meta.url));
+    const installed = join(home, "extensions", "little-intermissions");
+    await cp(fileURLToPath(new URL(".", import.meta.url)), installed, { recursive: true });
+    const { duckStatus, isStale, sendCommand, sendHome, wakeDuck } = await import(pathToFileURL(join(installed, "duck-control.mjs")));
+    const source = join(installed, "duck", "Duck.swift");
+    const cli = join(installed, "duck-cli.mjs");
     let started = false;
     try {
         await mkdir(dir, { recursive: true });
@@ -61,11 +63,10 @@ test("isolated native duck: quiet snooze, authenticated control, stopping and ke
                 exit(0)
             }
             controller.start()`);
-        const harness = join(home, "Duck.swift");
-        await writeFile(harness, hidden);
-        const binary = join(dir, "duck");
-        await run("swiftc", ["-swift-version", "5", harness, "-o", binary], { timeout: 90000 });
-        await run(binary, ["--state", dir, "--sprite", fileURLToPath(new URL("./duck/sprite.html", import.meta.url)), "--check-snooze"], { timeout: 10000 });
+        await writeFile(source, hidden);
+        const binary = join(home, "check-duck");
+        await run("swiftc", ["-swift-version", "5", source, "-o", binary], { timeout: 90000 });
+        await run(binary, ["--state", dir, "--sprite", join(installed, "duck", "sprite.html"), "--check-snooze"], { timeout: 10000 });
 
         started = true;
         const first = await wakeDuck();
@@ -121,6 +122,90 @@ test("isolated native duck: quiet snooze, authenticated control, stopping and ke
         started = false;
     } finally {
         if (started) await sendHome();
+        if (priorHome === undefined) delete process.env.COPILOT_HOME; else process.env.COPILOT_HOME = priorHome;
+        await rm(home, { recursive: true, force: true });
+    }
+});
+
+test("copied packages launch matching native and sprite versions regardless of timestamps", { skip: process.platform !== "darwin", timeout: 180000 }, async () => {
+    const home = await mkdtemp(join(tmpdir(), "duck-package-test-"));
+    const priorHome = process.env.COPILOT_HOME;
+    process.env.COPILOT_HOME = home;
+    const dir = join(home, "state", "little-intermissions");
+    let active;
+    try {
+        const original = fileURLToPath(new URL(".", import.meta.url));
+        const probe = join(dir, "flip-probe.json");
+        const launch = async (version, oldVoice) => {
+            const installed = join(home, version, "extensions", "little-intermissions");
+            await cp(original, installed, { recursive: true });
+            const source = join(installed, "duck", "Duck.swift");
+            const swift = (await readFile(source, "utf8"))
+                .replaceAll("panel.orderFrontRegardless()", "/* test window stays hidden */")
+                .replace("        enter()\n", "        menuFlip()\n")
+                .replace("            guard let self, let done, self.gen == g else { return }", `
+            if kind == "flip", let self {
+                self.web.evaluateJavaScript("document.body.dataset.act || null") { value, error in
+                    let evidence: [String: Any] = [
+                        "native": "${version}", "sprite": self.spriteURL.path,
+                        "act": value ?? NSNull(), "cue": result ?? NSNull(),
+                        "error": error?.localizedDescription ?? ""
+                    ]
+                    let data = try! JSONSerialization.data(withJSONObject: evidence)
+                    try! data.write(to: self.stateDir.appendingPathComponent("flip-probe.json"), options: .atomic)
+                }
+            }
+            guard let self, let done, self.gen == g else { return }`);
+            await writeFile(source, swift);
+            if (oldVoice) {
+                const voice = join(installed, "duck", "voice.js");
+                await writeFile(voice, (await readFile(voice, "utf8")).replace('case "flip":', 'case "unavailable-flip":'));
+            }
+            // A copied older checkout can have an earlier mtime than the shared executable.
+            await utimes(source, new Date(0), new Date(0));
+            const controls = await import(pathToFileURL(join(installed, "duck-control.mjs")));
+            active = controls;
+            await run(process.execPath, [join(installed, "duck-cli.mjs"), "wake"], { env: { ...process.env }, timeout: 90000 });
+            let evidence;
+            for (const deadline = Date.now() + 5000; Date.now() < deadline;) {
+                try { evidence = JSON.parse(await readFile(probe, "utf8")); break; }
+                catch (error) { if (error.code !== "ENOENT") throw error; }
+                await new Promise((resolve) => setTimeout(resolve, 100));
+            }
+            assert.ok(evidence, "the native menu action reached the loaded sprite");
+            assert.equal(evidence.error, "");
+            assert.equal(evidence.native, version, "the executable must come from this package");
+            const record = JSON.parse(await readFile(join(dir, "control.json"), "utf8"));
+            assert.equal(record.fingerprint, await controls.buildFingerprint());
+            assert.equal(await controls.isStale(), false);
+            await controls.sendHome();
+            active = null;
+            await rm(probe);
+            return { installed, evidence };
+        };
+        const old = await launch("old", true);
+        assert.equal(old.evidence.act, null);
+        assert.equal(old.evidence.cue, null, "reproduce the old sprite ignoring Flip");
+        const updated = await launch("updated", false);
+        assert.ok(["deskflip", "vasetoss", "chainsaw"].includes(updated.evidence.act), "Flip starts an animation through the native menu action");
+        assert.equal(updated.evidence.act, updated.evidence.cue.act);
+        assert.ok(updated.evidence.cue.ms >= 2600);
+        assert.notEqual(updated.evidence.sprite, old.evidence.sprite);
+        const bundle = join(updated.evidence.sprite, "..");
+        for (const name of ["Duck.swift", "sprite.html", "voice.js", "lines.js"]) {
+            assert.deepEqual(await readFile(join(bundle, name)), await readFile(join(updated.installed, "duck", name)));
+        }
+        const binary = join(bundle, "duck");
+        const compiledAt = (await stat(binary)).mtimeMs;
+        // The running bundle remains unchanged if the installed artwork is updated.
+        await writeFile(join(updated.installed, "duck", "voice.js"), "// next update\n");
+        assert.notEqual(await readFile(join(bundle, "voice.js"), "utf8"), "// next update\n");
+        await cp(join(bundle, "voice.js"), join(updated.installed, "duck", "voice.js"));
+        active = await import(pathToFileURL(join(updated.installed, "duck-control.mjs")));
+        await active.wakeDuck();
+        assert.equal((await stat(binary)).mtimeMs, compiledAt, "unchanged content reuses its own build");
+    } finally {
+        if (active) await active.sendHome();
         if (priorHome === undefined) delete process.env.COPILOT_HOME; else process.env.COPILOT_HOME = priorHome;
         await rm(home, { recursive: true, force: true });
     }

@@ -1,6 +1,6 @@
 import { spawn, execFile } from "node:child_process";
 import { createHash, randomBytes } from "node:crypto";
-import { mkdir, open, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, open, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { homedir, release } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,14 +8,14 @@ import { promisify } from "node:util";
 
 const run = promisify(execFile);
 const duckFile = (name) => fileURLToPath(new URL(`./duck/${name}`, import.meta.url));
-const source = duckFile("Duck.swift");
-const sprite = duckFile("sprite.html");
-const duckFiles = ["Duck.swift", "sprite.html", "voice.js", "lines.js"].map(duckFile);
+const duckFiles = ["Duck.swift", "sprite.html", "voice.js", "lines.js"];
 const desktopSupported = process.platform === "darwin" && Number(release().split(".")[0]) >= 22;
-let building;
+const building = new Map();
 
 export const stateDir = () => join(process.env.COPILOT_HOME || join(homedir(), ".copilot"), "state", "little-intermissions");
-const binaryPath = () => join(stateDir(), "duck");
+const buildDir = (fingerprint) => join(stateDir(), "builds", `${process.arch}-${fingerprint}`);
+const binaryPath = (fingerprint) => join(buildDir(fingerprint), "duck");
+const isBuilt = async () => binaryExists(binaryPath(await buildFingerprint()));
 const controlFile = () => join(stateDir(), "control.json");
 
 // Whole minutes from 1 to 180. Anything else is refused and never rounded, so a typo such as 250 or 2.5 is not guessed at.
@@ -89,6 +89,14 @@ async function optionalText(path) {
     }
 }
 
+async function binaryExists(path) {
+    try { return (await stat(path)).isFile(); }
+    catch (error) {
+        if (error.code === "ENOENT") return false;
+        throw error;
+    }
+}
+
 async function controlRecord() {
     const text = await optionalText(controlFile());
     if (text !== null) {
@@ -138,7 +146,7 @@ async function waitForExit(record) {
 export async function duckStatus() {
     const supported = desktopSupported;
     if (!supported) return { supported, running: false, built: false, sprint: null };
-    const built = await stat(binaryPath()).then(() => true, () => false);
+    const built = await isBuilt();
     let record;
     try { record = await controlRecord(); }
     catch (error) { return { supported, running: false, built, sprint: null, controlError: error.message }; }
@@ -150,8 +158,16 @@ export async function duckStatus() {
 
 // A hash of the files the duck is built from and loads.
 export async function buildFingerprint() {
+    return fingerprintOf(await readDuckFiles());
+}
+
+function readDuckFiles() {
+    return Promise.all(duckFiles.map((name) => readFile(duckFile(name))));
+}
+
+function fingerprintOf(contents) {
     const hash = createHash("sha256");
-    for (const file of duckFiles) hash.update(await readFile(file));
+    for (const content of contents) hash.update(content);
     return hash.digest("hex");
 }
 
@@ -163,18 +179,26 @@ export async function isStale() {
 
 async function ensureBuilt() {
     if (!desktopSupported) throw new Error("The floating duck needs macOS 13 or later.");
-    const binary = binaryPath();
-    const [src, bin] = await Promise.all([stat(source), stat(binary).catch(() => null)]);
-    if (bin && bin.mtimeMs >= src.mtimeMs) return;
-    building ??= (async () => {
-        await mkdir(stateDir(), { recursive: true, mode: 0o700 });
-        const temporary = `${binary}.${randomBytes(8).toString("hex")}.building`;
+    // Compile and load one snapshot, never a shared executable paired with another checkout's artwork.
+    const contents = await readDuckFiles();
+    const fingerprint = fingerprintOf(contents);
+    const directory = buildDir(fingerprint);
+    const bundle = { fingerprint, binary: binaryPath(fingerprint), sprite: join(directory, "sprite.html") };
+    if (await binaryExists(bundle.binary)) return bundle;
+    if (!building.has(directory)) building.set(directory, (async () => {
+        await mkdir(join(stateDir(), "builds"), { recursive: true, mode: 0o700 });
+        const temporary = await mkdtemp(join(stateDir(), "builds", ".building-"));
         try {
+            await Promise.all(duckFiles.map((name, i) => writeFile(join(temporary, name), contents[i], { mode: 0o600 })));
             const arch = process.arch === "arm64" ? "arm64" : "x86_64";
-            await run("swiftc", ["-O", "-swift-version", "5", "-target", `${arch}-apple-macosx13.0`, source, "-o", temporary], { timeout: 240000 });
-            await rename(temporary, binary);
+            await run("swiftc", ["-O", "-swift-version", "5", "-target", `${arch}-apple-macosx13.0`,
+                join(temporary, "Duck.swift"), "-o", join(temporary, "duck")], { timeout: 240000 });
+            try { await rename(temporary, directory); }
+            catch (error) {
+                if (!["EEXIST", "ENOTEMPTY"].includes(error.code) ||
+                    !await binaryExists(bundle.binary)) throw error;
+            }
         } catch (error) {
-            await rm(temporary, { force: true });
             const diagnostic = error.stderr?.trim() || error.message;
             const logPath = join(stateDir(), "duck-build.log");
             let logNote = `Full diagnostics: ${logPath}`;
@@ -182,17 +206,19 @@ async function ensureBuilt() {
             catch (logError) { logNote = `Could not write build diagnostics: ${logError.message}`; }
             const hint = error.code === "ENOENT" ? " Install the Xcode command line tools (swiftc was not found)." : "";
             throw new Error(`The duck could not be built.${hint}\n${diagnostic}\n${logNote}`, { cause: error });
+        } finally {
+            await rm(temporary, { recursive: true, force: true });
         }
-    })().finally(() => { building = undefined; });
-    await building;
+    })().finally(() => { building.delete(directory); }));
+    await building.get(directory);
+    return bundle;
 }
 
 async function startDuck() {
-    await ensureBuilt();
-    const fingerprint = await buildFingerprint();
+    const { binary, sprite, fingerprint } = await ensureBuilt();
     const log = await open(join(stateDir(), "duck.log"), "a", 0o600);
     try {
-        const child = spawn(binaryPath(), ["--sprite", sprite, "--state", stateDir(), "--fingerprint", fingerprint], {
+        const child = spawn(binary, ["--sprite", sprite, "--state", stateDir(), "--fingerprint", fingerprint], {
             detached: true,
             stdio: ["ignore", log.fd, log.fd],
         });
@@ -230,7 +256,7 @@ export async function sendHome() {
         await requestControl(record, "home");
         await waitForExit(record);
     }
-    return { supported: desktopSupported, running: false, built: await stat(binaryPath()).then(() => true, () => false), sprint: null };
+    return { supported: desktopSupported, running: false, built: await isBuilt(), sprint: null };
 }
 
 // Wakes the duck if it is at home, then leaves it a command. The duck takes the command on its next
