@@ -25,12 +25,14 @@ const toFaint = (debate) => {
 };
 
 test("every duck line is short enough for the bubble and appears only once", () => {
+    assert.ok(Array.isArray(lines.flip), "flip lines exist");
     const pools = {
         entrance: [lines.entrance, 80], hello: [lines.hello, 80], click: [lines.click, 80], announce: [lines.announce, 80],
         announceWin: [lines.announceWin, 80], decline: [lines.decline, 80], welcome: [lines.welcome, 80],
         quips: [lines.quips, 80], snooze: [lines.snooze, 80], nudge: [lines.nudge, 110], nudgeLate: [lines.nudgeLate, 110],
         nudgeLunch: [lines.nudgeLunch, 110], sneeze: [lines.cute.sneeze, 80], spin: [lines.cute.spin, 80],
         bow: [lines.cute.bow, 80], gagSay: [lines.gags.map((g) => g.say), 80], gagLog: [lines.gags.map((g) => g.log), 40],
+        flip: [lines.flip.map((g) => g.say), 80],
         sprintStart: [lines.sprintStart, 80], sprintCheck: [lines.sprintCheck, 80], sprintEnd: [lines.sprintEnd, 80],
         sprintExtend: [lines.sprintExtend, 80], sprintCancel: [lines.sprintCancel, 80],
         logFiller: [lines.logFiller, 40], early: [lines.report.early, 80], short: [lines.report.short, 80],
@@ -58,6 +60,34 @@ test("every duck line is short enough for the bubble and appears only once", () 
         assert.equal(e.tiers[3], e.tiers[3].toUpperCase(), `${e.id} frantic tier is shouted`);
     }
     assert.ok(exits.yield.length <= 15 && exits.decline.length <= 15);
+});
+
+test("flip cues draw all three cartoon gags with matching sprite animations", () => {
+    assert.ok(Array.isArray(lines.flip), "flip lines exist");
+    const voice = voiceAt(15);
+    const seen = new Set();
+    const timings = sprite.match(/const actMs = \{([^}]*)\}/)[1];
+    for (let i = 0; i < 12; i++) {
+        const cue = voice.cue("flip");
+        assert.ok(lines.flip.some((g) => g.act === cue.act && g.say === cue.text));
+        assert.ok(cue.ms >= 2600, "the line stays visible through the animation");
+        assert.ok(sprite.includes(`data-act="${cue.act}"`));
+        assert.match(timings, new RegExp(`\\b${cue.act}:`));
+        assert.ok(new RegExp(`body\\[data-act="${cue.act}"\\] #act \\{[^}]*animation:`).test(sprite), `${cue.act} animates the duck, not just its prop`);
+        seen.add(cue.act);
+    }
+    assert.deepEqual([...seen].sort(), ["chainsaw", "deskflip", "vasetoss"]);
+    assert.equal(voice.shiftLog.length, 0, "an explicit flip does not add a duty report");
+});
+
+test("desk flips away and each gag has an expressive face", () => {
+    const deskFrames = sprite.slice(sprite.indexOf("@keyframes desk-flip"), sprite.indexOf("@keyframes scatter"));
+    const rotations = Array.from(deskFrames.matchAll(/rotate\((-?\d+)deg\)/g), (match) => Number(match[1]));
+    assert.ok(rotations.length >= 3 && rotations.every((angle) => angle > 0), "desk turns clockwise away from the duck");
+    for (const act of ["deskflip", "vasetoss", "chainsaw"]) {
+        assert.ok(sprite.includes(`body[data-act="${act}"] .gag-angry`), `${act} shows the angry face`);
+        assert.ok(sprite.includes(`body[data-act="${act}"] .gag-relief`), `${act} shows relief`);
+    }
 });
 
 test("poses and acts the voice asks for exist in the sprite", () => {

@@ -1181,6 +1181,10 @@ final class DuckController: NSObject, WKNavigationDelegate, NSMenuDelegate {
             extendSprint()
         case "cute":
             menuCute()
+        case "flip":
+            guard mode == .nap else { return true }
+            guard calm else { return false }
+            menuFlip()
         default:
             break
         }
@@ -1300,6 +1304,7 @@ final class DuckController: NSObject, WKNavigationDelegate, NSMenuDelegate {
         menu.addItem(menuItem("Cover my desk for 5 minutes", #selector(menuCover)))
         menu.addItem(menuItem("Convince me…", #selector(menuConvince)))
         menu.addItem(menuItem("Do something cute", #selector(menuCute)))
+        menu.addItem(menuItem("Flip", #selector(menuFlip)))
         menu.addItem(.separator())
 
         let nudges = NSMenu()
@@ -1392,6 +1397,20 @@ final class DuckController: NSObject, WKNavigationDelegate, NSMenuDelegate {
         guard mode == .nap, move == .rest else { return }
         interrupt()
         doCute(explicit: true)
+    }
+
+    @objc func menuFlip() {
+        guard mode == .nap, move == .rest else { return }
+        interrupt()
+        busy = true
+        js("duck.base('idle')")
+        cue("flip") { [self] ms in
+            later(Double(ms) / 1000 + 0.6) { [self] in
+                busy = false
+                restPose()
+                scheduleCute(first: false)
+            }
+        }
     }
 
     @objc func menuNudge(_ item: NSMenuItem) {

@@ -14,6 +14,7 @@ const usage = `Usage: duck [command]
   snooze            Quiet for one hour (keeps a focus sprint)
   playfulness <mode>  calm or lively
   cute              Ask for a cute action
+  flip              Ask for a cartoon desk gag
   cover             Ask the duck to cover your desk
   convince          Ask the duck to convince you to take a break
   nudge             Ask the duck for a break nudge
@@ -101,6 +102,10 @@ const commands = {
     async cute(args) {
         none(args);
         return ask({ cmd: "cute" }, "Asked the duck to do something cute.");
+    },
+    async flip(args) {
+        none(args);
+        return ask({ cmd: "flip" }, "Asked the duck for a cartoon desk gag.", { quietInSprint: true });
     },
     async convince(args) {
         none(args);
