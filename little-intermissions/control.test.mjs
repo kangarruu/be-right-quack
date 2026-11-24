@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { execFile, spawn } from "node:child_process";
 import { once } from "node:events";
-import { mkdtemp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, rm, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { promisify } from "node:util";
@@ -61,6 +61,11 @@ test("compiler failure keeps real diagnostics and never points at a nonexistent 
     try {
         const tools = join(home, "tools");
         await mkdir(tools);
+        const sharedBinary = join(home, "state", "little-intermissions", "duck");
+        await mkdir(join(home, "state", "little-intermissions"), { recursive: true });
+        await writeFile(sharedBinary, "#!/bin/sh\nexit 1\n", { mode: 0o700 });
+        const future = new Date(Date.now() + 86400000);
+        await utimes(sharedBinary, future, future);
         await writeFile(join(tools, "swiftc"), '#!/bin/sh\necho "Duck.swift:42: error: deliberate compiler failure" >&2\nexit 1\n', { mode: 0o700 });
         await assert.rejects(promisify(execFile)(process.execPath, [cli.pathname, "wake"], {
             env: { ...process.env, COPILOT_HOME: home, PATH: `${tools}:${process.env.PATH}` },
