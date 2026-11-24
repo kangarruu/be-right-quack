@@ -26,6 +26,11 @@
   .eye-closed, .zzz, .props, .hearts, .eye-wide, .eye-x, .stars { opacity: 0; transition: opacity .25s; }
   .eye-open { transition: opacity .25s; }
 
+  .accessory { display: none; }
+  body[data-accessory="partyHat"] #party-hat,
+  body[data-accessory="topHat"] #top-hat,
+  body[data-accessory="scarf"] #scarf { display: inline; }
+
   /* nap: chin on chest, eyes shut, slow breathing */
   body[data-pose="nap"] #head-pose { transform: translate(-5px, 11px) rotate(24deg); }
   body[data-pose="nap"] .eye-open { opacity: 0; }
@@ -301,6 +306,7 @@
     padding: 8px 12px 9px; border-radius: 14px; background: #fffdf6; border: 1.5px solid #cbbd98; color: #55666e;
     font: italic 13px/1.35 Georgia, "Times New Roman", serif; box-shadow: 0 4px 14px rgba(70, 60, 30, .16);
     opacity: 0; pointer-events: none; transition: opacity .25s; }
+  body[data-accessory="topHat"] #bubble { bottom: 118px; }
   #bubble.show { opacity: 1; }
   #said { white-space: pre-line; }
   #chips { margin-top: 7px; }
@@ -377,6 +383,21 @@
       <g class="spray"><circle class="d1" cx="117" cy="40" r="2.8"/><circle class="d2" cx="115" cy="44" r="2.1"/><circle class="d3" cx="118" cy="47" r="1.6"/></g>
       <g class="props"><circle cx="92" cy="34" r="7.5" fill="#fff" fill-opacity=".25" stroke="#495862" stroke-width="2"/>
         <path d="M84.5 33.5l-11-2.5" stroke="#495862" stroke-width="2" stroke-linecap="round"/></g>
+      <g id="party-hat" class="accessory" stroke-linejoin="round">
+        <path d="M68 26 77 1l15 23q-11 6-24 2z" fill="#ec93a1" stroke="#985c73" stroke-width="1.8"/>
+        <path d="m72 18 12-5m-14 12 18-7" fill="none" stroke="#fff0b5" stroke-width="2.8"/>
+        <circle cx="77" cy="1" r="3" fill="#92c9bc" stroke="#577e77" stroke-width="1.4"/>
+      </g>
+      <g id="top-hat" class="accessory" transform="rotate(-5 83 25)" stroke="#17191d" stroke-width="1.6">
+        <path d="M75 25 73-5q9-2 18 0l-1 30z" fill="#25272c" stroke-linejoin="round"/>
+        <path d="m75 18 15-.1v5l-15 .1z" fill="#56505e" stroke="none"/>
+        <ellipse cx="83" cy="25" rx="15" ry="3" fill="#303137"/>
+      </g>
+      <g id="scarf" class="accessory" fill="#c95655" stroke="#914043" stroke-width="1.6" stroke-linejoin="round">
+        <path d="M77 55q2 9-3 16l-8-3q6-6 5-15z"/>
+        <path d="m69 64 7 3" fill="none" stroke="#ffd9a1" stroke-width="2.4"/>
+        <path d="M66 50q15 7 32 1l1 6q-18 7-33-1z"/>
+      </g>
     </g></g>
   </g>
   <path id="gag-wing" class="flip-prop" d="M64 76q12-9 25-2l23 5q7 2 4 7-3 4-10 2l-21-4q-12 9-21 4z"
@@ -550,6 +571,10 @@
   });
   window.duck = {
     base(pose) { body.dataset.pose = pose; },
+    wear(accessory) {
+      body.dataset.accessory = accessory;
+      requestAnimationFrame(reportBubble);
+    },
     face(dir) { body.dataset.dir = dir < 0 ? "-1" : "1"; },
     play(name) {
       clearTimeout(actTimer);

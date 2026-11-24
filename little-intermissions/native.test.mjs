@@ -8,7 +8,7 @@ import { promisify } from "node:util";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const run = promisify(execFile);
-test("isolated native duck: quiet snooze, authenticated control, stopping and keyboard settings", { skip: process.platform !== "darwin", timeout: 120000 }, async () => {
+test("isolated native duck: Temp scarf, quiet snooze, authenticated control, stopping and keyboard settings", { skip: process.platform !== "darwin", timeout: 120000 }, async () => {
     const home = await mkdtemp(join(tmpdir(), "duck-native-test-"));
     const dir = join(home, "state", "little-intermissions");
     const priorHome = process.env.COPILOT_HOME;
@@ -56,10 +56,23 @@ test("isolated native duck: quiet snooze, authenticated control, stopping and ke
                 let quietUntil = controller.snoozeUntil
                 controller.nudgeIgnored(now: Date())
                 precondition(controller.snoozeUntil >= quietUntil, "a sprint response must not shorten quiet time")
+                controller.accessory = .scarf
+                controller.startDebate()
+                precondition(controller.wornAccessory == .scarf, "debate is not Temp duty")
                 controller.beginDuty()
+                precondition(controller.wornAccessory == .nude, "the scarf comes off for Temp duty")
                 controller.nextGagAt = .distantPast
                 controller.maybeGag(now: Date())
                 precondition(!controller.busy, "quiet time suppresses unsolicited duty quips too")
+                controller.finishDuty(early: true, away: 0)
+                precondition(controller.wornAccessory == .nude, "the scarf stays off through the report")
+                controller.toNap()
+                precondition(controller.wornAccessory == .scarf, "the selected scarf returns after the report")
+                controller.beginDuty()
+                controller.accessory = .topHat
+                precondition(controller.wornAccessory == .topHat, "a hat can replace the scarf on duty")
+                controller.toNap()
+                precondition(controller.wornAccessory == .topHat, "ending duty must not restore an old choice")
                 exit(0)
             }
             controller.start()`);

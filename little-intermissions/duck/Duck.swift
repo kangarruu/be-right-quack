@@ -48,6 +48,19 @@ struct Bag<T: Equatable> {
 
 enum Cute: CaseIterable { case waddle, preen, look, hop, quip, yawn, wiggle, sneeze, spin, bow }
 
+enum Accessory: String, CaseIterable {
+    case nude, partyHat, topHat, scarf
+
+    var title: String {
+        switch self {
+        case .nude: return "Nude"
+        case .partyHat: return "Party Hat"
+        case .topHat: return "Top Hat"
+        case .scarf: return "Scarf"
+        }
+    }
+}
+
 // A button inside the duck's speech bubble. The page measures it; this file hit-tests it, because the
 // native view takes every mouse event and the page never sees a click.
 struct Chip {
@@ -121,6 +134,11 @@ final class DuckController: NSObject, WKNavigationDelegate, NSMenuDelegate {
 
     var mode = Mode.nap
     var move = Move.rest
+    var accessory = Accessory.nude
+    var wornAccessory: Accessory {
+        if accessory == .scarf && (mode == .onDuty || mode == .reporting) { return .nude }
+        return accessory
+    }
     var gen = 0
     var busy = false
 
@@ -304,7 +322,12 @@ final class DuckController: NSObject, WKNavigationDelegate, NSMenuDelegate {
         return NSRect(x: x, y: Double(windowHeight) - (y + h), width: w, height: h)
     }
 
+    func updateAccessory() {
+        js("duck.wear(\(literal(wornAccessory.rawValue)))")
+    }
+
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        updateAccessory()
         guard !ready else { return }
         ready = true
         if let snapshotPath { return takeSnapshot(to: snapshotPath) }
@@ -450,6 +473,7 @@ final class DuckController: NSObject, WKNavigationDelegate, NSMenuDelegate {
         interrupt()
         if m != .sprinting { clearSprint() }
         mode = m
+        updateAccessory()
         note("mode \(m)")
     }
 
@@ -1330,6 +1354,17 @@ final class DuckController: NSObject, WKNavigationDelegate, NSMenuDelegate {
         let playItem = NSMenuItem(title: "Playfulness", action: nil, keyEquivalent: "")
         playItem.submenu = play
         menu.addItem(playItem)
+
+        let accessories = NSMenu()
+        for choice in Accessory.allCases {
+            let item = menuItem(choice.title, #selector(menuAccessory(_:)))
+            item.representedObject = choice
+            item.state = choice == accessory ? .on : .off
+            accessories.addItem(item)
+        }
+        let accessoryItem = NSMenuItem(title: "Accessories", action: nil, keyEquivalent: "")
+        accessoryItem.submenu = accessories
+        menu.addItem(accessoryItem)
         menu.addItem(.separator())
 
         menu.addItem(menuItem("Send duck home", #selector(menuHome)))
@@ -1427,6 +1462,15 @@ final class DuckController: NSObject, WKNavigationDelegate, NSMenuDelegate {
     @objc func menuPlay(_ item: NSMenuItem) {
         do { _ = try applyPreference(["cmd": "playfulness", "value": item.representedObject as? String ?? "calm"]) }
         catch { reportSettingsError(error) }
+    }
+
+    @objc func menuAccessory(_ item: NSMenuItem) {
+        guard let choice = item.representedObject as? Accessory else {
+            note("Missing accessory for menu item: \(item.title)")
+            return
+        }
+        accessory = choice
+        updateAccessory()
     }
 
     @objc func menuHome() { goHome(force: false) }
