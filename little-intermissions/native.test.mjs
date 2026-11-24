@@ -26,6 +26,13 @@ test("isolated native duck: quiet snooze, authenticated control, stopping and ke
                 if FileManager.default.fileExists(atPath: stateDir.appendingPathComponent("hold-home").path) { return }`)
             .replace("controller.start()", `
             if CommandLine.arguments.contains("--check-snooze") {
+                precondition(controller.buildMenu().items.contains { $0.action == #selector(DuckController.menuFlip) && $0.title == "Flip" }, "menu offers Flip")
+                precondition(controller.handleCommand(["cmd": "flip"]), "flip command is recognized")
+                precondition(controller.busy, "flip starts an action")
+                controller.interrupt()
+                controller.busy = true
+                precondition(!controller.handleCommand(["cmd": "flip"]), "busy flip waits")
+                controller.interrupt()
                 controller.menuSnooze()
                 controller.busy = false
                 controller.doCute()
@@ -34,7 +41,12 @@ test("isolated native duck: quiet snooze, authenticated control, stopping and ke
                 precondition(!controller.busy, "snooze must suppress unsolicited welcomes")
                 controller.menuCute()
                 precondition(controller.busy, "explicit cute action remains available")
+                controller.interrupt()
+                controller.menuFlip()
+                precondition(controller.busy, "explicit flip remains available during snooze")
                 controller.startSprint(minutes: 25)
+                controller.menuFlip()
+                precondition(controller.mode == .sprinting, "flip does not interrupt a sprint")
                 controller.menuSnooze()
                 precondition(controller.mode == .sprinting, "snooze must not cancel a sprint")
                 controller.finishSprint(end: Date(), now: Date())
@@ -76,6 +88,7 @@ test("isolated native duck: quiet snooze, authenticated control, stopping and ke
         }
         await sendCommand({ cmd: "say", text: "Authenticated command." });
         const cliRun = (...args) => run(process.execPath, [cli, ...args], { env: { ...process.env, COPILOT_HOME: home } });
+        assert.match((await cliRun("flip")).stdout, /Asked the duck/);
         for (const args of [["nudges", "off"], ["nudges", "30"], ["playfulness", "lively"], ["snooze"]]) {
             await cliRun(...args);
         }
@@ -83,7 +96,7 @@ test("isolated native duck: quiet snooze, authenticated control, stopping and ke
         assert.equal(status.settings.nudgeEveryMinutes, 30);
         assert.equal(status.settings.playfulness, "lively");
         assert.ok(status.snoozeUntil > Date.now() + 3500000);
-        for (const args of [["nudges", "1"], ["playfulness", "wild"], ["snooze", "forever"]]) {
+        for (const args of [["nudges", "1"], ["playfulness", "wild"], ["snooze", "forever"], ["flip", "extra"]]) {
             await assert.rejects(cliRun(...args), (error) => error.code === 2);
         }
         await writeFile(join(dir, "hold-home"), "");

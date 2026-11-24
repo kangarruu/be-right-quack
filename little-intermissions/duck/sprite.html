@@ -153,6 +153,130 @@
   body[data-act="shake"] #lower-beak { transform: rotate(22deg); }
   @keyframes shake { from { transform: translate(-2px, 0) rotate(-2deg); } to { transform: translate(2px, -1px) rotate(2deg); } }
 
+  .flip-prop { opacity: 0; pointer-events: none; }
+  #gag-wing { transform-origin: 68px 76px; }
+  .gag-angry, .gag-relief { opacity: 0; }
+  body[data-act="deskflip"] .eye-open, body[data-act="vasetoss"] .eye-open,
+  body[data-act="chainsaw"] .eye-open { opacity: 0; animation: none; }
+  body[data-act="deskflip"] .gag-angry, body[data-act="vasetoss"] .gag-angry,
+  body[data-act="chainsaw"] .gag-angry { animation: gag-anger 2.6s steps(1, end); }
+  body[data-act="deskflip"] .gag-relief, body[data-act="vasetoss"] .gag-relief,
+  body[data-act="chainsaw"] .gag-relief { animation: gag-relief 2.6s steps(1, end); }
+  body[data-act="deskflip"] #lower-beak, body[data-act="vasetoss"] #lower-beak,
+  body[data-act="chainsaw"] #lower-beak { animation: gag-beak 2.6s steps(1, end); }
+  @keyframes gag-anger { 0% { opacity: 1; } 62%, 100% { opacity: 0; } }
+  @keyframes gag-relief { 0% { opacity: 0; } 62%, 100% { opacity: 1; } }
+  @keyframes gag-beak { 0% { transform: rotate(27deg); } 62%, 100% { transform: rotate(0); } }
+  body[data-act="deskflip"] #act { animation: throw-duck 2.6s ease-out; }
+  body[data-act="deskflip"] #gag-wing { animation: throw-wing 2.6s ease-out; }
+  body[data-act="deskflip"] #tiny-desk { animation: desk-flip 2.6s linear; transform-origin: 130px 96px; }
+  body[data-act="deskflip"] #papers { animation: scatter 2.6s linear; }
+  body[data-act="deskflip"] #desk-impact { animation: impact 2.6s linear; }
+  body[data-act="vasetoss"] #act { animation: throw-duck 2.6s ease-out; }
+  body[data-act="vasetoss"] #gag-wing { animation: throw-wing 2.6s ease-out; }
+  body[data-act="vasetoss"] #vase { animation: vase-toss 2.6s linear; transform-origin: 111px 81px; }
+  body[data-act="vasetoss"] #shards { animation: shatter 2.6s linear; }
+  body[data-act="vasetoss"] #shards path { animation: shard-scatter 2.6s ease-out; }
+  body[data-act="vasetoss"] #shards path:nth-child(2) { animation-name: shard-scatter-right; }
+  body[data-act="vasetoss"] #shards path:nth-child(3) { animation-name: shard-scatter-far; }
+  body[data-act="vasetoss"] #vase-impact { animation: impact 2.6s linear; }
+  body[data-act="chainsaw"] #act { animation: saw-duck 2.6s linear; }
+  body[data-act="chainsaw"] #gag-wing { animation: saw-wing 2.6s linear; }
+  body[data-act="chainsaw"] #saw { animation: saw-cut 2.6s linear; transform-origin: 105px 79px; }
+  body[data-act="chainsaw"] #desk-left { animation: cut-left 2.6s linear; transform-origin: 125px 102px; }
+  body[data-act="chainsaw"] #desk-right { animation: cut-right 2.6s linear; transform-origin: 153px 102px; }
+  body[data-act="chainsaw"] #chips-spray { animation: chips 2.6s linear; }
+  @keyframes throw-duck {
+    0%, 5%, 100% { transform: none; }
+    13% { transform: translateX(-8px) rotate(-14deg) scale(.92, 1.08); }
+    20% { transform: translate(12px, -5px) rotate(15deg) scale(1.1, .9); }
+    28% { transform: translate(3px, 0) rotate(-4deg); }
+    40%, 90% { transform: none; }
+  }
+  @keyframes throw-wing {
+    0% { opacity: 0; }
+    5%, 55% { opacity: 1; }
+    13% { transform: rotate(26deg); }
+    20%, 30% { transform: rotate(-35deg); }
+    60%, 100% { opacity: 0; transform: none; }
+  }
+  @keyframes desk-flip {
+    0%, 13% { opacity: 1; transform: none; }
+    21% { opacity: 1; transform: translate(8px, -15px) rotate(75deg); }
+    32% { opacity: 1; transform: translate(19px, -23px) rotate(145deg); }
+    45%, 88% { opacity: 1; transform: translate(22px, -3px) rotate(180deg); }
+    100% { opacity: 0; transform: translate(22px, -3px) rotate(180deg); }
+  }
+  @keyframes scatter {
+    0%, 18% { opacity: 0; transform: translate(-12px, -28px); }
+    25% { opacity: 1; }
+    48%, 85% { opacity: 1; transform: none; }
+    100% { opacity: 0; transform: none; }
+  }
+  @keyframes impact {
+    0%, 40%, 65%, 100% { opacity: 0; }
+    46%, 55% { opacity: 1; }
+  }
+  @keyframes vase-toss {
+    0%, 13% { opacity: 1; transform: translate(-5px, 0) rotate(-15deg); }
+    21% { opacity: 1; transform: translate(12px, -22px) rotate(40deg); }
+    32% { opacity: 1; transform: translate(35px, -32px) rotate(160deg); }
+    44% { opacity: 1; transform: translate(53px, 18px) rotate(300deg); }
+    45%, 100% { opacity: 0; transform: translate(53px, 18px) rotate(300deg); }
+  }
+  @keyframes shatter {
+    0%, 44% { opacity: 0; transform: translate(0, 0); }
+    45% { opacity: 1; transform: translate(0, 0); }
+    60%, 88% { opacity: 1; transform: translate(2px, 0); }
+    100% { opacity: 0; transform: translate(2px, 0); }
+  }
+  @keyframes shard-scatter {
+    0%, 45% { transform: translate(10px, 0); }
+    60%, 100% { transform: none; }
+  }
+  @keyframes shard-scatter-right {
+    0%, 45% { transform: translate(-2px, 0); }
+    60%, 100% { transform: none; }
+  }
+  @keyframes shard-scatter-far {
+    0%, 45% { transform: translate(-10px, 0); }
+    60%, 100% { transform: none; }
+  }
+  @keyframes saw-duck {
+    0%, 8%, 100% { transform: none; }
+    16% { transform: translateX(-5px) rotate(-9deg); }
+    24%, 36%, 48% { transform: translate(4px, -1px) rotate(4deg); }
+    30%, 42%, 54% { transform: translate(1px, 1px) rotate(-3deg); }
+    65%, 90% { transform: none; }
+  }
+  @keyframes saw-wing {
+    0%, 100% { opacity: 0; }
+    8%, 65% { opacity: 1; transform: rotate(-8deg); }
+    75% { opacity: 0; }
+  }
+  @keyframes saw-cut {
+    0% { opacity: 0; transform: translate(-5px, -12px) rotate(-20deg); }
+    8%, 18% { opacity: 1; transform: translate(-5px, -12px) rotate(-20deg); }
+    25%, 35% { opacity: 1; transform: translate(7px, -3px) rotate(5deg); }
+    48%, 55% { opacity: 1; transform: translate(7px, 14px) rotate(5deg); }
+    70% { opacity: 0; transform: translate(-4px, -3px); }
+    100% { opacity: 0; }
+  }
+  @keyframes cut-left {
+    0%, 54% { opacity: 1; transform: none; }
+    68%, 88% { opacity: 1; transform: translate(-5px, 4px) rotate(-16deg); }
+    100% { opacity: 0; transform: translate(-5px, 4px) rotate(-16deg); }
+  }
+  @keyframes cut-right {
+    0%, 54% { opacity: 1; transform: none; }
+    68%, 88% { opacity: 1; transform: translate(8px, 4px) rotate(22deg); }
+    100% { opacity: 0; transform: translate(8px, 4px) rotate(22deg); }
+  }
+  @keyframes chips {
+    0%, 24%, 58%, 100% { opacity: 0; }
+    28%, 48% { opacity: 1; }
+  }
+
   /* faint: swoons onto its back with its feet in the air, X eyes, stars circle the head.
      The X eye is drawn as a "+" because the final -134deg rotation turns it into an X. */
   body[data-pose="faint"] #root { transform-origin: 59px 80px; animation: faint-fall 1s cubic-bezier(.45, 0, .7, 1) forwards; }
@@ -212,6 +336,14 @@
 
   @media (prefers-reduced-motion: reduce) {
     body[data-pose] #root, body[data-act] #act, .zzz text, .stars .orbit, #timer.late .clock, .band-tails { animation-duration: 0s !important; animation-iteration-count: 1 !important; }
+    body[data-act] .flip-prop, body[data-act] .flip-prop path { animation: none !important; }
+    body[data-act="deskflip"] #tiny-desk { opacity: 1; transform: translate(22px, -3px) rotate(180deg); }
+    body[data-act="deskflip"] #papers, body[data-act="vasetoss"] #shards { opacity: 1; }
+    body[data-act="chainsaw"] #desk-left { opacity: 1; transform: translate(-5px, 4px) rotate(-16deg); }
+    body[data-act="chainsaw"] #desk-right { opacity: 1; transform: translate(8px, 4px) rotate(22deg); }
+    body[data-act] .gag-angry, body[data-act] .gag-relief, body[data-act] #lower-beak { animation: none !important; }
+    body[data-act="deskflip"] .gag-relief, body[data-act="vasetoss"] .gag-relief,
+    body[data-act="chainsaw"] .gag-relief { opacity: 1; }
   }
 </style>
 </head>
@@ -234,6 +366,9 @@
       <g class="band"><path d="M69.5 31Q84 21 98 29" stroke="#6fa88f" stroke-width="4.6" fill="none" stroke-linecap="round"/>
         <path class="band-tails" d="M69.5 31q-7-3-11 3M69.5 31q-6 4-7 10" stroke="#6fa88f" stroke-width="2.6" fill="none" stroke-linecap="round"/></g>
       <g class="eye-open"><circle cx="92" cy="34" r="3.2" fill="#3c4849"/><circle cx="93" cy="33" r="1" fill="#fff"/></g>
+      <g class="gag-angry"><ellipse cx="92" cy="34" rx="4" ry="3.6" fill="#fff" stroke="#3c4849" stroke-width="1.2"/>
+        <circle cx="93" cy="34" r="2" fill="#3c4849"/><path d="M87 28l10 4" stroke="#3c4849" stroke-width="2.6" stroke-linecap="round"/></g>
+      <path class="gag-relief" d="M88 34q4 3.5 8 0" fill="none" stroke="#3c4849" stroke-width="2.2" stroke-linecap="round"/>
       <g class="eye-wide"><circle cx="92" cy="34" r="4.6" fill="#fff" stroke="#3c4849" stroke-width="1.6"/><circle cx="93" cy="34.5" r="2" fill="#3c4849"/></g>
       <path class="eye-closed" d="M88 35q4 3.5 8 0" stroke="#3c4849" stroke-width="2" fill="none" stroke-linecap="round"/>
       <path class="eye-x" d="M92 30.4v7.2m-3.6-3.6h7.2" stroke="#3c4849" stroke-width="2" fill="none" stroke-linecap="round"/>
@@ -243,7 +378,46 @@
       <g class="props"><circle cx="92" cy="34" r="7.5" fill="#fff" fill-opacity=".25" stroke="#495862" stroke-width="2"/>
         <path d="M84.5 33.5l-11-2.5" stroke="#495862" stroke-width="2" stroke-linecap="round"/></g>
     </g></g>
-  </g></g>
+  </g>
+  <path id="gag-wing" class="flip-prop" d="M64 76q12-9 25-2l23 5q7 2 4 7-3 4-10 2l-21-4q-12 9-21 4z"
+    fill="#edc66c" stroke="#ba9b57" stroke-width="2" stroke-linejoin="round"/>
+  </g>
+  <g id="tiny-desk" class="flip-prop" stroke="#9e7957" stroke-width="2" stroke-linejoin="round">
+    <path d="M108 82h44v7h-44z" fill="#d9b685"/>
+    <path d="M112 89v20m36-20v20" fill="none" stroke-linecap="round"/>
+    <path d="M123 76h12v6h-12z" fill="#faf7e9" stroke="#cbbd98"/>
+  </g>
+  <g id="desk-impact" class="flip-prop" fill="none" stroke="#d99d57" stroke-width="2.5" stroke-linecap="round">
+    <path d="M115 69l-4-7m12 4 2-8m8 10 7-6M152 107l6-3m-6 7 7 2"/>
+  </g>
+  <g id="papers" class="flip-prop" fill="#fffdf6" stroke="#9e7957" stroke-width="1">
+    <path d="M115 108l9-2 2 4-9 2zM137 109l9-1 1 4-9 1zM164 107l9 1-1 4-9-1z"/>
+  </g>
+  <g id="vase" class="flip-prop">
+    <path d="M106 71h10l-2 5c0 3 4 6 3 11-1 5-11 5-12 0-1-5 3-8 3-11z" fill="#8fb7a0" stroke="#638d7b" stroke-width="1.8"/>
+    <path d="M107 82h8" stroke="#e9f4e9" stroke-width="1.4"/>
+  </g>
+  <g id="shards" class="flip-prop" fill="#8fb7a0" stroke="#638d7b" stroke-width="1.5" stroke-linejoin="round">
+    <path d="M151 105l4-9 4 11zM160 104l6-7 1 11zM169 106l7-4-2 7zM144 108l4-5 4 5z"/>
+  </g>
+  <g id="vase-impact" class="flip-prop" fill="none" stroke="#d99d57" stroke-width="2" stroke-linecap="round">
+    <path d="M157 92l-4-7m8 6 2-8m5 10 7-5"/>
+  </g>
+  <g id="saw" class="flip-prop">
+    <rect x="103" y="73" width="22" height="13" rx="4" fill="#e9a86f" stroke="#b87b42" stroke-width="2"/>
+    <path d="M102 75q-6-4-7 2v6q1 5 7 1" fill="none" stroke="#b87b42" stroke-width="2.5"/>
+    <rect x="123" y="76" width="25" height="8" rx="4" fill="#d2d7d8" stroke="#6b7577" stroke-width="2"/>
+    <path d="M126 84l2 3 2-3 2 3 2-3 2 3 2-3 2 3 2-3 2 3" fill="none" stroke="#6b7577" stroke-width="1.5"/>
+  </g>
+  <g id="desk-left" class="flip-prop" fill="#d9b685" stroke="#9e7957" stroke-width="2" stroke-linejoin="round">
+    <path d="M116 88h22l-2 4 2 3h-22z"/><path d="M120 95v14" fill="none" stroke-linecap="round"/>
+  </g>
+  <g id="desk-right" class="flip-prop" fill="#d9b685" stroke="#9e7957" stroke-width="2" stroke-linejoin="round">
+    <path d="M138 88h21v7h-21l2-3z"/><path d="M155 95v14" fill="none" stroke-linecap="round"/>
+  </g>
+  <g id="chips-spray" class="flip-prop" fill="#d9a95f">
+    <path d="M140 85l4-8 3 3zM150 80l6-5 1 4zM153 88l7-2 1 3zM143 99l5 4-4 2z"/>
+  </g>
   <g class="stars"><g class="orbit">
     <path transform="translate(11 46)" d="M0-5 1.3-1.8 4.8-1.6 2.1.7 2.9 4 0 2.2-2.9 4-2.1.7-4.8-1.6-1.3-1.8z"/>
     <path transform="translate(23 67)" d="M0-5 1.3-1.8 4.8-1.6 2.1.7 2.9 4 0 2.2-2.9 4-2.1.7-4.8-1.6-1.3-1.8z"/>
@@ -272,7 +446,7 @@
   let timerTick;
   const DUCK_LEFT = 96, DUCK_RIGHT = 192, TIMER_W = 72, TIMER_GAP = 4; // DUCK_* match duckRect in Duck.swift
   const actMs = { hop: 1200, land: 520, happy: 1700, quack: 1500, preen: 2700, look: 2900, yawn: 2500, wiggle: 1700,
-    sneeze: 1800, spin: 1600, bow: 1900, shake: 1300 };
+    sneeze: 1800, spin: 1600, bow: 1900, shake: 1300, deskflip: 2600, vasetoss: 2600, chainsaw: 2600 };
   function notify(message) {
     try { window.webkit.messageHandlers.duck.postMessage(message); } catch { /* running in a plain browser */ }
   }

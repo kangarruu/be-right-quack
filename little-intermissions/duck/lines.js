@@ -284,6 +284,12 @@ globalThis.DUCK_LINES = {
     bow: ["Thank you, thank you.", "A small bow. For the crowd.", "I'll be here all week."],
   },
 
+  flip: [
+    { say: "Meeting adjourned. Permanently.", act: "deskflip" },
+    { say: "That's going in the incident report.", act: "vasetoss" },
+    { say: "I have cut through the red tape. And the desk.", act: "chainsaw" },
+  ],
+
   // The convince-me debate. The nth excuse you pick gets tier n-1 of its
   // rebuttal: calm, firm, pleading, frantic. A fifth excuse makes the duck faint.
   debate: {

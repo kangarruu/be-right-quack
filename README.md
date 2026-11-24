@@ -39,7 +39,7 @@ node "$duck_cli" home
 
 Focus sprints accept 1 to 180 whole minutes and default to 25. Use `sprint stop` to cancel or `sprint extend` to add five minutes. Use `nudges off` (or `30`, `50`, `75`, or `90`) and `playfulness calm` (or `lively`) to change saved settings. `snooze` pauses unsolicited quips, wandering, and welcomes for an hour or until the duck quits, without canceling a sprint or its end prompt.
 
-For less serious work, try `cute`, `cover`, `convince`, `nudge`, or `say "The stapler is secure."` The duck uses text bubbles, not audio. Some requests are queued and can be skipped if they don't fit what the duck is doing. The sprite and debate choices use the mouse; VoiceOver operation has not been verified.
+For less serious work, try `cute`, `flip`, `cover`, `convince`, `nudge`, or `say "The stapler is secure."` You can also choose **Flip** from the right-click menu. Each `flip` plays one destructive cartoon gag; it does not touch your real desk or windows. The duck uses text bubbles, not audio. Some requests are queued and can be skipped if they don't fit what the duck is doing; `flip` is quiet during focus sprints. The sprite and debate choices use the mouse; VoiceOver operation has not been verified.
 
 ## Optional Copilot canvas integration
 

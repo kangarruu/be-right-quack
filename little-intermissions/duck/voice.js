@@ -99,7 +99,7 @@
     };
 
     // kind: entrance | hello | click | nudge | announce | gag | report | decline |
-    //       welcome | quip | snooze | sneeze | spin | bow | say (speaks o.text) |
+    //       welcome | quip | snooze | sneeze | spin | bow | flip | say (speaks o.text) |
     //       sprintStart | sprintCheck | sprintEnd (o.n minutes) | sprintExtend | sprintCancel
     // Returns { text, ms, act? }, or null when the kind is unknown or lacks what it needs.
     // ms === 0 means the bubble stays until replaced.
@@ -129,6 +129,11 @@
           const gag = draw("gags", lines.gags);
           remember(gag.log);
           out = { text: gag.say, act: gag.act, ms: lasts(3500, gag.say) };
+          break;
+        }
+        case "flip": {
+          const gag = draw("flip", lines.flip);
+          out = { text: gag.say, act: gag.act, ms: lasts(3200, gag.say) };
           break;
         }
         case "report": out = { text: composeReport(o), ms: 0 }; break;
