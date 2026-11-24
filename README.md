@@ -24,6 +24,8 @@ node little-intermissions/duck-cli.mjs wake
 
 The first wake compiles the duck locally and can take a minute. The duck runs as a separate desktop process after the command returns. Right-click it for settings or to send it home. Keep the cloned folder for future launches and updates. Each source version has its own cached executable and matching animation files; changing checkouts cannot reuse another version's executable based on file timestamps.
 
+Right-click Quacker and open **Accessories** to choose **Party Hat**, **Top Hat** (just a little too tall), or **Scarf**. Each choice replaces the last. Choose **Nude** to take it off; that's how Quacker starts every time. Quacker takes his scarf off for Temp duty and puts it back on after his report if it's still selected.
+
 ## A duck in your terminal
 
 No global `duck` command is installed. From the repo root, use:
