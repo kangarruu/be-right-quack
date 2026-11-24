@@ -24,8 +24,6 @@ node little-intermissions/duck-cli.mjs wake
 
 The first wake compiles the duck locally and can take a minute. The duck runs as a separate desktop process after the command returns. Right-click it for settings or to send it home. Keep the cloned folder for future launches and updates. Each source version has its own cached executable and matching animation files; changing checkouts cannot reuse another version's executable based on file timestamps.
 
-Right-click Quacker and open **Accessories** to choose **Party Hat**, **Top Hat** (just a little too tall), or **Scarf**. Each choice replaces the last. Choose **Nude** to take it off; that's how Quacker starts every time. Quacker takes his scarf off for Temp duty and puts it back on after his report if it's still selected.
-
 ## A duck in your terminal
 
 No global `duck` command is installed. From the repo root, use:
@@ -42,6 +40,12 @@ node "$duck_cli" home
 Focus sprints accept 1 to 180 whole minutes and default to 25. Use `sprint stop` to cancel or `sprint extend` to add five minutes. Use `nudges off` (or `30`, `50`, `75`, or `90`) and `playfulness calm` (or `lively`) to change saved settings. `snooze` pauses unsolicited quips, wandering, and welcomes for an hour or until the duck quits, without canceling a sprint or its end prompt.
 
 For less serious work, try `cute`, `flip`, `cover`, `convince`, `nudge`, or `say "The stapler is secure."` You can also choose **Flip** from the right-click menu. Each `flip` plays one destructive cartoon gag; it does not touch your real desk or windows. The duck uses text bubbles, not audio. Some requests are queued and can be skipped if they don't fit what the duck is doing; `flip` is quiet during focus sprints. The sprite and debate choices use the mouse; VoiceOver operation has not been verified.
+
+## Accessories
+
+Right-click the duck and open **Accessories**. Dividers separate hats and caps, crowns and costumes, novelty hats, and face and neck accessories. Each choice replaces the last.
+
+Choose **Nude** to take everything off; that's how the duck starts every time.
 
 ## Optional Copilot canvas integration
 

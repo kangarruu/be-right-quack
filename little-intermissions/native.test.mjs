@@ -28,7 +28,28 @@ test("isolated native duck: Temp scarf, quiet snooze, authenticated control, sto
                 if FileManager.default.fileExists(atPath: stateDir.appendingPathComponent("hold-home").path) { return }`)
             .replace("controller.start()", `
             if CommandLine.arguments.contains("--check-snooze") {
+                var cuteDeck = Bag([Cute.preen, .showKnife])
+                for _ in 0..<3 {
+                    precondition(cuteDeck.next(excluding: .showKnife) == .preen, "idle draws skip the knife even when reshuffling")
+                }
+                precondition(cuteDeck.next() == .showKnife, "a requested draw can use the reserved knife gag")
                 precondition(controller.buildMenu().items.contains { $0.action == #selector(DuckController.menuFlip) && $0.title == "Flip" }, "menu offers Flip")
+                func accessoryItems() -> [NSMenuItem] {
+                    guard let menu = controller.buildMenu().item(withTitle: "Accessories")?.submenu else {
+                        preconditionFailure("missing Accessories submenu")
+                    }
+                    return menu.items
+                }
+                let items = accessoryItems()
+                let choices = items.compactMap { $0.representedObject as? Accessory }
+                precondition(choices == Accessory.allCases, "every accessory appears once in menu order")
+                precondition(items.split { $0.isSeparatorItem }.map { $0.count } == [1, 4, 4, 3, 4], "Nude and the four wearable groups are separated")
+                precondition(items.filter { $0.state == .on }.map { $0.title } == ["Nude"], "starts nude")
+                guard let bedtime = items.first(where: { ($0.representedObject as? Accessory) == .sleepCapAndCandle }) else {
+                    preconditionFailure("missing bedtime outfit")
+                }
+                controller.menuAccessory(bedtime)
+                precondition(controller.wornAccessory == .sleepCapAndCandle && accessoryItems().filter { $0.state == .on }.map { $0.title } == [bedtime.title], "the bedtime outfit replaces Nude as one checked choice")
                 precondition(controller.handleCommand(["cmd": "flip"]), "flip command is recognized")
                 precondition(controller.busy, "flip starts an action")
                 controller.interrupt()
@@ -59,15 +80,18 @@ test("isolated native duck: Temp scarf, quiet snooze, authenticated control, sto
                 controller.accessory = .scarf
                 controller.startDebate()
                 precondition(controller.wornAccessory == .scarf, "debate is not Temp duty")
-                controller.beginDuty()
-                precondition(controller.wornAccessory == .nude, "the scarf comes off for Temp duty")
-                controller.nextGagAt = .distantPast
-                controller.maybeGag(now: Date())
-                precondition(!controller.busy, "quiet time suppresses unsolicited duty quips too")
-                controller.finishDuty(early: true, away: 0)
-                precondition(controller.wornAccessory == .nude, "the scarf stays off through the report")
-                controller.toNap()
-                precondition(controller.wornAccessory == .scarf, "the selected scarf returns after the report")
+                for accessory in [Accessory.scarf, .oversizedBowTie, .sleepCapAndCandle] {
+                    controller.accessory = accessory
+                    controller.beginDuty()
+                    precondition(controller.wornAccessory == .nude, "neckwear and the candle come off for Temp duty")
+                    controller.nextGagAt = .distantPast
+                    controller.maybeGag(now: Date())
+                    precondition(!controller.busy, "quiet time suppresses unsolicited duty quips too")
+                    controller.finishDuty(early: true, away: 0)
+                    precondition(controller.wornAccessory == .nude, "these accessories stay off through the report")
+                    controller.toNap()
+                    precondition(controller.wornAccessory == accessory, "the selected accessory returns after the report")
+                }
                 controller.beginDuty()
                 controller.accessory = .topHat
                 precondition(controller.wornAccessory == .topHat, "a hat can replace the scarf on duty")

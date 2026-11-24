@@ -35,27 +35,54 @@ struct Bag<T: Equatable> {
 
     init(_ items: [T]) { self.items = items }
 
-    mutating func next() -> T {
-        if pool.isEmpty {
+    mutating func next(excluding excluded: T? = nil) -> T {
+        var index = pool.lastIndex { $0 != excluded }
+        if index == nil {
             pool = items.shuffled()
-            if items.count > 1, pool.last == last { pool.swapAt(0, pool.count - 1) }
+            index = pool.lastIndex { $0 != excluded && $0 != last }
+                ?? pool.lastIndex { $0 != excluded }
         }
-        let value = pool.removeLast()
+        guard let index else { preconditionFailure("Bag has no eligible items") }
+        let value = pool.remove(at: index)
         last = value
         return value
     }
 }
 
-enum Cute: CaseIterable { case waddle, preen, look, hop, quip, yawn, wiggle, sneeze, spin, bow }
+enum Cute: CaseIterable { case waddle, preen, look, hop, quip, yawn, wiggle, sneeze, spin, bow, showKnife }
 
 enum Accessory: String, CaseIterable {
-    case nude, partyHat, topHat, scarf
+    case nude
+    case topHat, cowboyHat, detectiveCap, chefsHat
+    case crown, flowerCrown, wizardHat, sleepCapAndCandle
+    case partyHat, propellerBeanie, trafficCone
+    case aviatorSunglasses, headphones, oversizedBowTie, scarf
+
+    static let menuGroups: [[Accessory]] = [
+        [.nude],
+        [.topHat, .cowboyHat, .detectiveCap, .chefsHat],
+        [.crown, .flowerCrown, .wizardHat, .sleepCapAndCandle],
+        [.partyHat, .propellerBeanie, .trafficCone],
+        [.aviatorSunglasses, .headphones, .oversizedBowTie, .scarf],
+    ]
 
     var title: String {
         switch self {
         case .nude: return "Nude"
-        case .partyHat: return "Party Hat"
         case .topHat: return "Top Hat"
+        case .cowboyHat: return "Cowboy Hat"
+        case .detectiveCap: return "Detective Cap"
+        case .chefsHat: return "Chef's Hat"
+        case .crown: return "Crown"
+        case .flowerCrown: return "Flower Crown"
+        case .wizardHat: return "Wizard Hat"
+        case .sleepCapAndCandle: return "Sleep Cap"
+        case .partyHat: return "Party Hat"
+        case .propellerBeanie: return "Propeller Beanie"
+        case .trafficCone: return "Traffic Cone"
+        case .aviatorSunglasses: return "Aviator Sunglasses"
+        case .headphones: return "Headphones"
+        case .oversizedBowTie: return "Oversized Bow Tie"
         case .scarf: return "Scarf"
         }
     }
@@ -136,7 +163,12 @@ final class DuckController: NSObject, WKNavigationDelegate, NSMenuDelegate {
     var move = Move.rest
     var accessory = Accessory.nude
     var wornAccessory: Accessory {
-        if accessory == .scarf && (mode == .onDuty || mode == .reporting) { return .nude }
+        if mode == .onDuty || mode == .reporting {
+            switch accessory {
+            case .scarf, .oversizedBowTie, .sleepCapAndCandle: return .nude
+            default: break
+            }
+        }
         return accessory
     }
     var gen = 0
@@ -847,7 +879,7 @@ final class DuckController: NSObject, WKNavigationDelegate, NSMenuDelegate {
             js("duck.base('idle')")
             cue(kind) { [self] ms in later(Double(ms) / 1000 + 0.8, finish) }
         }
-        switch cuteBag.next() {
+        switch cuteBag.next(excluding: explicit ? nil : .showKnife) {
         case .waddle:
             let v = currentScreen().visibleFrame
             let distance = CGFloat.random(in: 90...260) * (Bool.random() ? 1 : -1)
@@ -873,6 +905,9 @@ final class DuckController: NSObject, WKNavigationDelegate, NSMenuDelegate {
         case .wiggle:
             js("duck.base('idle'); duck.play('wiggle')")
             later(2.0, finish)
+        case .showKnife:
+            js("duck.base('idle'); duck.play('showKnife')")
+            later(1.3, finish)
         case .sneeze: spoken("sneeze")
         case .spin: spoken("spin")
         case .bow: spoken("bow")
@@ -1356,11 +1391,14 @@ final class DuckController: NSObject, WKNavigationDelegate, NSMenuDelegate {
         menu.addItem(playItem)
 
         let accessories = NSMenu()
-        for choice in Accessory.allCases {
-            let item = menuItem(choice.title, #selector(menuAccessory(_:)))
-            item.representedObject = choice
-            item.state = choice == accessory ? .on : .off
-            accessories.addItem(item)
+        for group in Accessory.menuGroups {
+            if accessories.numberOfItems > 0 { accessories.addItem(.separator()) }
+            for choice in group {
+                let item = menuItem(choice.title, #selector(menuAccessory(_:)))
+                item.representedObject = choice
+                item.state = choice == accessory ? .on : .off
+                accessories.addItem(item)
+            }
         }
         let accessoryItem = NSMenuItem(title: "Accessories", action: nil, keyEquivalent: "")
         accessoryItem.submenu = accessories
